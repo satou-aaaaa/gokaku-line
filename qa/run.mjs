@@ -111,6 +111,8 @@ const splitQ = (cnt) => { const hi = cnt.map(([a]) => a > 0), lo = cnt.map(([, b
 
 // ---- 2. ファイルの中身 ----
 const html = readFileSync(path.join(root, "index.html"), "utf8"), gen = readFileSync(path.join(root, "data.js"), "utf8"), readme = readFileSync(path.join(root, "README.md"), "utf8");
+// ひな形の写し（<!-- 名前:begin〜end -->）はゲームの言葉ではないので外し、Core.kofi・Core.KOFI は写す前の形にもどして見る（shared-workflows の sync-template が足した）
+const gameOwn = (t) => t.replace(/<!-- ([a-z0-9-]+):begin[\s\S]*?<!-- \1:end -->/g, "").split("${Core.KOFI}").join("https://ko-fi.com/satouaaaaa").replace(/Core\.kofi\(("(?:[^"\\]|\\.)*"), ("(?:[^"\\]|\\.)*")\)/g, (m, a, b) => "`<p class=\"note kofi\">" + JSON.parse(a) + "、<a href=\"https://ko-fi.com/satouaaaaa\" target=\"_blank\" rel=\"noopener\">Ko-fi でコーヒー1杯の応援</a>をもらえると、" + JSON.parse(b) + "の励みになります（任意・遊ぶのはずっと無料）。</p>`");
 const ext = [...html.matchAll(/(?:src|href)="(https?:[^"]+)"/g)].map((m) => m[1]).filter((u) => !/^https:\/\/fonts\.googleapis\.com(\/|$)|^https:\/\/ko-fi\.com\/satouaaaaa$/.test(u));
 check("外から読むのは文字（Google Fonts）だけ。スクリプト・広告・解析を入れない（出典のリンクは押したときに開くだけ）", ext.length === 0 && ![...html.matchAll(/<script[^>]+src="([^"]+)"/g)].some((m) => /^https?:/.test(m[1])), ext.join(","));
 check("CSP で通信先を自分だけにしている", /connect-src 'self'/.test(html) && !/connect-src[^;"]*https/.test(html));
@@ -118,14 +120,14 @@ check("Math.random は練習・とことんの種だけ（今日の5問・上級
 check("乱数は sort の比較の中で引かない（ブラウザで引く回数が変わる）", !/\.sort\(\s*\([^)]*\)\s*=>[^\n;]*\b(R|rng|rand|Math\.random)\s*\(/.test(html + gen));
 { const inl = html.split("<script>").slice(1).map((x) => x.split("</" + "script>")[0]).join("\n"); // index.html の中の script も見る（nemuri-kotsu#1 で行の途中に // を入れて画面が動かなくなった）
   check("一行の式の途中にコメント // を足さない（行の残りが消える。rosen-hitofude 2026-11-04・nemuri-kotsu#1）", !/;\s*\/\/[^\n]*;\s*\w/.test((gen + "\n" + inl).split("\n").filter((l) => !l.trim().startsWith("//")).join("\n"))); }
-check("言い方：「絶対」「必ず公平」と言い切らない", !/絶対に|必ず公平|これが正しい公平/.test(html + gen + readme));
+check("言い方：「絶対」「必ず公平」と言い切らない", !/絶対に|必ず公平|これが正しい公平/.test(gameOwn(html) + gen + readme));
 { const howto = (html.match(/<dialog id="howto"[\s\S]*?<\/dialog>/) || [""])[0], ab = (html.match(/function about\(\)[\s\S]*?\n}/) || [""])[0], dis = (t) => /架空/.test(t) && /実在の試験や人の集まりとは関係ありません/.test(t);
   check("言い方：遊び方・「このゲームについて」・README のどれにも、点数・組・人が架空で、実在の試験や集まりと関係ないことがある", dis(howto) && dis(ab) && dis(readme), `遊び方 ${dis(howto)}・について ${dis(ab)}・README ${dis(readme)}`); }
-check("言い方：実在の集団（人種・性別・国・実在の試験）の名前を出さない。組は A・B だけ", !/人種|性別|男性|女性|黒人|白人|国籍|司法試験|共通テスト|センター試験|COMPAS|再犯/.test(html.replace(/<!-- a11y:begin[\s\S]*?a11y:end -->/, "").replace(/<!-- core:begin[\s\S]*?core:end -->/, "") + gen + readme));
+check("言い方：実在の集団（人種・性別・国・実在の試験）の名前を出さない。組は A・B だけ", !/人種|性別|男性|女性|黒人|白人|国籍|司法試験|共通テスト|センター試験|COMPAS|再犯/.test(gameOwn(html).replace(/<!-- a11y:begin[\s\S]*?a11y:end -->/, "").replace(/<!-- core:begin[\s\S]*?core:end -->/, "") + gen + readme));
 { const ab = (html.match(/function about\(\)[\s\S]*?\n}/) || [""])[0];
   check("このゲームについて：3つの論文の出典（題名・著者・年・URL）と、言い切らない一文がある", /Kleinberg/.test(ab + gen) && /Chouldechova/.test(ab + gen) && /Hardt/.test(ab + gen) && /解釈は分かれ/.test(ab) && /定義そのものではなく/.test(ab) && Object.values(G.SRC).every(([n, u]) => /（20\d\d）/.test(n) && /^https:\/\/arxiv\.org\/abs\//.test(u))); }
 // 写し元（屋台の値下げ合戦 yatai-negasen、その写し元の風力階級よみ）の言葉が残っていない（game-dev.md A 手順5）
-check("写し元（屋台の値下げ合戦・風力階級よみ）の言葉が残っていない（game-dev.md A 手順5）", !/屋台|値下げ|性格帳|しっぺ返し|Axelrod|アクセルロッド|囚人のジレンマ|ytn-|YTN|yatai|みどり屋|団子|縁日|軒|風力|風速|気象庁|ノット|fry-|FRY|fuuryoku|まなび帳/.test(html.replace(/<!-- a11y:begin[\s\S]*?a11y:end -->/, "").replace(/<!-- store:begin[\s\S]*?store:end -->/, "").replace(/<!-- core:begin[\s\S]*?core:end -->/, "").replace(/<!-- kiroku:begin[\s\S]*?kiroku:end -->/, "") + gen + readme + readFileSync(path.join(root, "manifest.webmanifest"), "utf8") + readFileSync(path.join(root, "tools/make-og.cjs"), "utf8") + readFileSync(path.join(root, "tools/make-icons.cjs"), "utf8") + readFileSync(path.join(root, "sw.js"), "utf8").replace(/^\/\/.*$/gm, "")));
+check("写し元（屋台の値下げ合戦・風力階級よみ）の言葉が残っていない（game-dev.md A 手順5）", !/屋台|値下げ|性格帳|しっぺ返し|Axelrod|アクセルロッド|囚人のジレンマ|ytn-|YTN|yatai|みどり屋|団子|縁日|軒|風力|風速|気象庁|ノット|fry-|FRY|fuuryoku|まなび帳/.test(gameOwn(html).replace(/<!-- a11y:begin[\s\S]*?a11y:end -->/, "").replace(/<!-- store:begin[\s\S]*?store:end -->/, "").replace(/<!-- core:begin[\s\S]*?core:end -->/, "").replace(/<!-- kiroku:begin[\s\S]*?kiroku:end -->/, "") + gen + readme + readFileSync(path.join(root, "manifest.webmanifest"), "utf8") + readFileSync(path.join(root, "tools/make-og.cjs"), "utf8") + readFileSync(path.join(root, "tools/make-icons.cjs"), "utf8") + readFileSync(path.join(root, "sw.js"), "utf8").replace(/^\/\/.*$/gm, "")));
 // ゲームごとに手で書く所が、このゲームの言葉で書いてある（incidents/2026-11-18-game-copy-hand-written-text.md・game-copy-manifest-feedback.md）
 { const desc = (html.match(/<meta name="description" content="([^"]+)"/) || [])[1] || "", mf = JSON.parse(readFileSync(path.join(root, "manifest.webmanifest"), "utf8")), og = readFileSync(path.join(root, "tools/make-og.cjs"), "utf8");
   check("手で書く所（description・遊び方・2段目・ホームの1行目・manifest・共有画像）がこのゲームの言葉", /合格ライン/.test(desc) && /3つのメーター/.test(desc) && /合格ライン/.test((html.match(/<dialog id="howto"[\s\S]*?<\/dialog>/) || [""])[0]) && /3つ全部をそろえる線の組は/.test(html) && /3つの公平メーターをそろえる/.test(html) && /公平メーター/.test(mf.description) && /合格率/.test(og) && /当たり率/.test(og)); }
@@ -135,7 +137,7 @@ check("写し元（屋台の値下げ合戦・風力階級よみ）の言葉が�
   check("共有画像の例の数は式（当たり率×合格率＝力ありの割合×(1−見逃し率)）と合い、そろった印は値が同じときだけ", m.length === 3 && m.every((x) => x[3] === (x[1] === x[2])) && pA > 0 && pA < 1 && pB > 0 && pB < 1, JSON.stringify(m)); }
 check("画面にお笑いの言葉を入れない（本物っぽく）", !/お笑い|ギャグ|ツッコミ|なんでやねん|（うそ）/.test(html + gen));
 check("引き継ぎ：transfer.js をゲームの script より前に、このゲームの記録のキー（記録・文字・復習）だけで読む・depth.js も前に読む", /<script src="transfer\.js" data-game="gokaku-line" data-keys="gkl-v1,gkl-fs,gkl-depth"><\/script>\s*<script src="depth\.js" data-game="gokaku-line" data-key="gkl-depth"><\/script>\s*<\/head>/.test(html) && html.indexOf('src="transfer.js"') < html.indexOf('src="data.js"') && /data-hk/.test(html) && existsSync(path.join(root, "transfer.js")));
-check("好きなだけ遊べる：チケット・回数の上限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|チケット|すると開く|🔒/.test(html) && !/\blife\b|ELIFE/.test(html));
+check("好きなだけ遊べる：チケット・回数の上限・🔒で開くモードを入れない（game-dev.md F1・F2）", !/🎫|チケット|すると開く|🔒/.test(gameOwn(html)) && !/\blife\b|ELIFE/.test(gameOwn(html)));
 check("時間制限を入れない（setInterval・残り秒を使わない）", !/残り\d*秒|制限時間|setInterval\(/.test(html.replace(/<!-- (a11y|core|kiroku|store):begin[\s\S]*?\1:end -->/g, "")));
 { const og = (k) => (html.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]+)"`)) || [])[1] || "";
   const png = readFileSync(path.join(root, "og.png"));
@@ -550,7 +552,7 @@ try {
     const bad = [], small = [];
     for (const [w, fs] of [[320, 3], [390, 2], [320, 1]]) {
       const q = await newPage(w); await closeHow(q);
-      await q.evaluate((fs) => localStorage.setItem("gkl-fs", String(fs)), fs); await q.reload(); await q.waitForTimeout(150);
+      await q.evaluate((fs) => (localStorage.setItem("gkl-fs", String(fs)), localStorage.setItem("a11y-v1", JSON.stringify({ ...JSON.parse(localStorage.getItem("a11y-v1") || "{}"), fs: undefined }))), fs); await q.reload(); await q.waitForTimeout(150);
       for (const go of [null, "#go-d", "solve", "#go-cal", "#go-dex", "#go-ach", "#go-e"]) {
         if (go === "solve") { await solve(q); }
         else if (go) { await q.goto(url); await q.waitForTimeout(100); await q.click(go); }
