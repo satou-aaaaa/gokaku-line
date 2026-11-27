@@ -1570,7 +1570,7 @@ function load() {
     join: (w, o) => {
       if (!(w.cur && o.cur && typeof w.cur === "object" && typeof o.cur === "object" && w.cur.i === o.cur.i && w.cur.tag === o.cur.tag && w.res.length === o.res.length)) return w;
       const u = (a, b) => [...new Set([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])])];
-      return { ...w, cur: { ...w.cur, wrong: u(w.cur.wrong, o.cur.wrong), w2: u(w.cur.w2, o.cur.w2), hints: Math.max(+w.cur.hints || 0, +o.cur.hints || 0), step: Math.max(w.cur.step === 2 ? 2 : 1, o.cur.step === 2 ? 2 : 1), h2: w.cur.h2 || o.cur.h2 ? 1 : 0, jd: w.cur.jd || o.cur.jd || null, ln: okLn(w.cur.ln) ? w.cur.ln : o.cur.ln } };
+      return { ...w, cur: { ...w.cur, wrong: u(w.cur.wrong, o.cur.wrong), w2: u(w.cur.w2, o.cur.w2), hints: Math.max(+w.cur.hints || 0, +o.cur.hints || 0), step: Math.max(w.cur.step === 2 ? 2 : 1, o.cur.step === 2 ? 2 : 1), h2: w.cur.h2 || o.cur.h2 ? 1 : 0, jd: w.cur.jd || o.cur.jd || null, ln: o.cur.step === 2 && w.cur.step !== 2 && okLn(o.cur.ln) ? o.cur.ln : okLn(w.cur.ln) ? w.cur.ln : o.cur.ln } };
     },
   });
 }
@@ -1763,9 +1763,10 @@ function startRun(mode, opt) {
 let cur = null;
 const same = (r) => r && cur && r.date === cur.date && r.id === cur.id && r.res.length === cur.i && r.list[cur.i] === cur.tag; // 保存した進み具合が、この画面と同じ問題か
 // まちがえた・ヒントを使ったその時に復習へ入れる（とことんで降りる・閉じるなど、解き終えずにやめても残る）
-function early() { if (cur && !cur.done && ((cur.wrong && cur.wrong.length) || cur.hints || (cur.w2 && cur.w2.length))) Depth.mark(cur.tag, 1, cur.P.name); }
+// 入れるのは、この画面で新しくまちがえた・ヒントを使ったときだけ（cur.mk は復習へ入れた分の数。前の日に保存したヒントや、別のタブの分で、つまみを動かすたびに復習の日を延ばさない）
+function early(fresh) { if (cur && !cur.done && fresh) Depth.mark(cur.tag, 1, cur.P.name); }
 // keep は保存した回が同じ問題のときだけ early する（古いタブが復習の段を戻さない）。別のタブで2段目へ進んでいたら、この画面も2段目にする
-function keep() { let ok = false; const st0 = cur.step; save((s) => { const r = s.runs[MODE]; if (!same(r)) return; ok = true; const was = r.cur && r.cur.i === cur.i && r.cur.tag === cur.tag ? r.cur : { wrong: [], hints: 0 }; cur.hints = Math.max(cur.hints, was.hints || 0); for (const w of was.wrong || []) if (!cur.wrong.includes(w)) cur.wrong.push(w); cur.step = Math.max(cur.step, was.step || 1); for (const w of was.w2 || []) if (!cur.w2.includes(w)) cur.w2.push(w); if (!cur.jd && was.jd) cur.jd = was.jd; if (was.h2) cur.h2 = 1; r.cur = { i: cur.i, tag: cur.tag, wrong: cur.wrong.slice(), hints: cur.hints, step: cur.step, w2: cur.w2.slice(), jd: cur.jd, h2: cur.h2 ? 1 : 0, ln: cur.ln.slice() }; }); if (ok) early(); if (ok && cur.step === 2 && st0 !== 2) { const c0 = cur; setTimeout(() => { if (cur === c0 && !cur.done && cur.step === 2) askWhy(); }, 0); } }
+function keep() { let ok = false; const st0 = cur.step, fresh = missOf() > cur.mk; save((s) => { const r = s.runs[MODE]; if (!same(r)) return; ok = true; const was = r.cur && r.cur.i === cur.i && r.cur.tag === cur.tag ? r.cur : { wrong: [], hints: 0 }; cur.hints = Math.max(cur.hints, was.hints || 0); for (const w of was.wrong || []) if (!cur.wrong.includes(w)) cur.wrong.push(w); if (was.step === 2 && st0 !== 2 && okLn(was.ln)) cur.ln = was.ln.slice(); cur.step = Math.max(cur.step, was.step || 1); for (const w of was.w2 || []) if (!cur.w2.includes(w)) cur.w2.push(w); if (!cur.jd && was.jd) cur.jd = was.jd; if (was.h2) cur.h2 = 1; r.cur = { i: cur.i, tag: cur.tag, wrong: cur.wrong.slice(), hints: cur.hints, step: cur.step, w2: cur.w2.slice(), jd: cur.jd, h2: cur.h2 ? 1 : 0, ln: cur.ln.slice() }; }); if (ok) { early(fresh); cur.mk = missOf(); } if (ok && cur.step === 2 && st0 !== 2) { paintLines(); const c0 = cur; setTimeout(() => { if (cur === c0 && !cur.done && cur.step === 2) askWhy(); }, 0); } } // 別のタブで確かめた2段目は、その線も合わせて描き直す
 const missOf = () => cur.wrong.length + cur.hints + cur.w2.length; // 2段目のまちがいも数える
 const GN = ["A", "B"];
 const ptOf = (t) => `${t * 10}点以上`;
@@ -1816,6 +1817,7 @@ function play(stay) {
   const tag = run.list[i], P = G.make(tag), hard = run.mode === "h";
   const saved = run.cur && run.cur.i === i && run.cur.tag === tag ? run.cur : { wrong: [], hints: 0 };
   cur = { i, date: run.date, id: run.id, tag, P, ln: okLn(saved.ln) ? saved.ln.slice() : P.start.slice(), wrong: (saved.wrong || []).slice(), hints: saved.hints || 0, step: saved.step === 2 ? 2 : 1, w2: (saved.w2 || []).filter((x) => x !== P.why && G.WHY[x]), jd: saved.jd || null, h2: saved.step === 2 && saved.h2 ? 1 : 0, done: false };
+  cur.mk = missOf(); // 保存してあったまちがい・ヒントは、そのときに復習へ入れてある
   const label = run.mode === "d" ? LV[P.lv] : run.mode === "a" ? `あとから・${LV[P.lv]}` : hard ? "上級" : run.mode === "r" ? `復習・${LV[P.lv]}` : run.mode === "e" ? `とことん・${LV[P.lv]}` : `練習・${LV[P.lv]}`;
   const showTip = (run.mode === "d" || run.mode === "a") && i === 0 && cur.step === 1 && !cur.wrong.length, tip = tipOf(run.date);
   const three = P.ask === "RFV";
@@ -1861,7 +1863,8 @@ function play(stay) {
 }
 // ヒント：1回目は見るところ、2回目は線の手がかり（そろう組があれば A組の線をそこへ動かす）
 const lookOf = (P) => (P.ask === "RFV" ? "まず、●の割合（力ありの割合）を2組でくらべよう。" : "まず1つ目のメーターだけそろえ、次にもう1つを見よう。");
-const keyOf2 = (P) => (P.ok.length ? `A組の線を${ptOf(P.ok[0][0])}にすると、そろう線の組があります。` : "合格率と見逃し率をそろえても、当たり率がずれます。");
+// そろう組が無いときは、合格率と見逃し率がそろう組があるか（割合がちがう組）、それも無いか（分かれ方のちがう組）で言い分ける
+const keyOf2 = (P) => (P.ok.length ? `A組の線を${ptOf(P.ok[0][0])}にすると、そろう線の組があります。` : G.solve({ A: P.A, B: P.B, ask: "RF" }).ok.length ? "合格率と見逃し率をそろえても、当たり率がずれます。" : "合格率と見逃し率を同時にそろえる線の組も、この点数にはありません。");
 function paint() {
   const h = $("hint"); if (h) h.disabled = cur.done || cur.hints >= 2;
   for (const id of ["decide", "none", "dn0", "up0", "dn1", "up1", "ln0", "ln1"]) { const e = $(id); if (e) e.disabled = locked(); }
@@ -2101,7 +2104,7 @@ function about() {
   $("back").onclick = home; bindFooter(); toTop();
 }
 
-window.__nm = { setLine: (g, t) => setLine(g, t), sureCount: (ok) => sureCount(ok), setMem: (j) => { mem = j; }, randomTags, idsOf, mode: () => MODE, load, save, todayKey, dayNo, lateDays, ACH, achGot, nextAch, tally, shareText, streak, endlessList, moreList, ERAMP, TIPS, cur: () => cur, play: (m) => { if (m) MODE = m; play(); }, home, cal, book, about, EPOCH, KEY, G, start: startRun, setMore: (f) => { const o = moreHook; moreHook = f; return o; } };
+window.__nm = { setLine: (g, t) => setLine(g, t), sureCount: (ok) => sureCount(ok), setMem: (j) => { mem = j; }, randomTags, idsOf, mode: () => MODE, load, save, todayKey, dayNo, lateDays, ACH, achGot, nextAch, tally, shareText, streak, endlessList, moreList, ERAMP, TIPS, cur: () => cur, keyOf2, play: (m) => { if (m) MODE = m; play(); }, home, cal, book, about, EPOCH, KEY, G, start: startRun, setMore: (f) => { const o = moreHook; moreHook = f; return o; } };
 home();
 if ("serviceWorker" in navigator && location.protocol === "https:" && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>

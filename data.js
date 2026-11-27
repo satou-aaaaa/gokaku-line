@@ -195,6 +195,7 @@
       if ((k.gen === "same") !== (sv.all.length > 0) && k.ask === "RFV") continue;
       // はじめの線は、言われたメーターがそろっていない所から
       const bad = []; for (let a = LMIN; a <= LMAX; a++) for (let b = LMIN; b <= LMAX; b++) if (!sv.ok.some(([x, y]) => x === a && y === b)) bad.push([a, b]);
+      if (!bad.length) continue; // どの線でもそろってしまう組は、はじめの線を置けないので作り直す
       const st0 = bad.filter(([a, b]) => Math.abs(a - 5) + Math.abs(b - 5) <= 2);
       const start = (st0.length ? st0 : bad)[ri(R, 0, (st0.length ? st0 : bad).length - 1)];
       P = { A, B, ask: k.ask, ok: sv.ok, all: sv.all, start };

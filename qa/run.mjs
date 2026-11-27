@@ -22,7 +22,7 @@ const firstClose = async (q) => { if (await q.locator("#howto[open]").count()) a
 const G = createRequire(import.meta.url)(path.join(root, "data.js"));
 const SHIFT0 = (+process.env.QA_SHIFT_DAYS || 0) * 864e5; // 日付を変える口（qa:today-only）
 
-const PINS = "rf:1:0000002516,fv:2:1020021033,same:1:012410000002,rfx:2:00000021711,shape:0:0000410022,perf:0:0000111012,close:1:1490120326,same2:4:0021300051;rf:0:0130011334,fv:3:0002320016,diff:1:0101001104,rfx:4:0000011446,shape:4:0000214212,close:0:0000024257,perf:0:0000322473,same2:2:0001000304;rf:1:0000002022,rv:1:0020400002,diff:0:0021010002,rvx:0:0000023001,same2:0:0001113123,perf:0:00000001047,close:4:00001111128,shape:3:0013224512"; // 過去の日の問題の印（変わったら過去の日の問題が変わっている。data.js を直したら作り直して PR に理由を書く）
+const PINS = "rf:1:0.3/0.1/0.0/0.0/0.0/0.0/2.0/5.1/1.0/6.1|0.2/0.2/0.0/0.0/0.0/1.4/0.1/0.3/2.1/3.1,fv:2:1.1/0.0/2.1/0.6/0.3/2.3/1.6/0.4/3.4/3.0|0.2/0.0/0.0/3.0/0.0/1.10/1.6/2.3/0.6/5.1,same:1:0.4/12.0/4.3/10.1/0.1/0.2/0.1/0.0/0.0/2.0|0.3/1.1/2.2/3.1/3.1/7.0/10.0/1.1/0.3/1.0,rfx:2:0.1/0.0/0.1/0.0/0.1/0.0/2.3/1.2/7.0/11.1|0.1/0.0/0.1/0.0/1.3/0.1/0.0/2.4/1.0/6.0,shape:0:0.1/0.4/0.2/0.5/4.5/1.2/0.2/0.0/2.0/2.0|0.2/0.1/0.3/1.4/1.2/1.2/0.0/1.0/1.0/1.0,perf:0:0.6/0.2/0.4/0.2/1.0/1.0/1.0/0.0/1.0/2.0|0.8/0.2/0.5/0.3/0.2/5.0/3.0/6.0/4.0/2.0,close:1:1.1/4.2/9.1/0.2/1.1/2.2/0.3/3.0/2.0/6.0|0.2/0.1/1.0/1.0/1.0/2.0/1.0/0.2/2.3/4.0,same2:4:0.2/0.0/2.0/1.0/3.0/0.2/0.0/0.3/5.0/1.1|0.3/2.0/2.0/5.0/0.1/0.1/1.3/3.3/1.0/4.1;rf:0:0.3/1.1/3.0/0.9/0.3/1.3/1.3/3.1/3.1/4.0|0.1/4.0/3.0/1.3/1.2/4.4/2.1/4.0/3.1/6.0,fv:3:0.1/0.1/0.3/2.1/3.0/2.0/0.0/0.0/1.0/6.0|0.6/0.4/1.2/0.1/0.1/1.0/1.0/0.0/0.0/3.0,diff:1:0.1/1.0/0.0/1.1/0.0/0.4/1.6/1.0/0.0/4.0|0.1/1.0/0.0/0.0/2.0/0.5/0.0/0.2/5.0/4.0,rfx:4:0.5/0.2/0.0/0.0/0.1/1.3/1.1/4.4/4.6/6.2|0.2/0.1/0.0/0.3/0.0/0.0/1.0/1.1/9.2/10.0,shape:4:0.2/0.4/0.6/0.4/2.0/1.1/4.1/2.0/1.0/2.0|0.2/0.3/0.6/1.10/1.2/2.1/3.0/0.0/6.0/3.0,close:0:0.5/0.9/0.2/0.0/0.0/2.2/4.1/2.0/5.0/7.1|0.8/0.4/0.0/1.0/0.0/4.0/2.0/3.0/3.0/5.0,perf:0:0.2/0.4/0.2/0.1/3.0/2.0/2.0/4.0/7.0/3.0|0.3/0.2/0.3/0.2/3.0/2.0/0.0/1.0/1.0/3.0,same2:2:0.2/0.1/0.2/1.0/0.0/0.1/0.1/3.4/0.0/4.1|0.5/0.2/1.0/1.2/0.1/1.5/1.2/2.2/3.4/7.1;rf:1:0.5/0.1/0.3/0.0/0.0/0.0/2.4/0.0/2.1/2.0|0.7/0.1/0.1/0.0/0.0/0.0/1.1/1.0/2.0/6.0,rv:1:0.2/0.0/2.2/0.1/4.1/0.0/0.2/0.2/0.2/2.0|0.3/3.3/3.0/0.3/0.1/0.0/0.1/0.1/0.0/2.0,diff:0:0.3/0.2/2.0/1.1/0.4/1.1/0.3/0.0/0.0/2.0|1.3/2.0/3.0/1.2/1.2/0.1/0.0/2.0/1.0/1.0,rvx:0:0.3/0.1/0.2/0.1/0.2/2.1/3.0/0.3/0.0/1.1|1.7/1.2/1.1/8.1/5.1/2.0/0.1/0.3/0.1/2.3,same2:0:0.1/0.0/0.1/1.1/1.0/1.0/3.0/1.9/2.5/3.1|0.1/0.1/1.1/5.1/2.0/0.7/1.7/0.4/1.1/6.1,perf:0:0.1/0.0/0.1/0.3/0.2/0.1/0.1/10.0/4.0/7.0|0.3/0.2/0.4/0.2/0.1/0.2/0.0/2.0/2.0/2.0,close:4:0.4/0.4/0.1/0.1/1.1/1.3/1.1/11.1/2.0/8.0|0.2/0.3/0.0/0.0/0.0/1.0/1.1/1.0/3.0/8.0,shape:3:0.3/0.0/1.3/3.8/2.6/2.0/4.0/5.0/1.0/2.0|0.1/0.3/0.5/1.2/4.3/2.1/1.0/2.0/1.0/4.0"; // 過去の日の問題の印（変わったら過去の日の問題が変わっている。data.js を直したら作り直して PR に理由を書く）
 
 // ---- 1. 問題の作り方（ブラウザを使わない）----
 // ゲームとは別に書いた全探索。点の柱 cnt から、線 tA・tB（1〜9。t×10点以上が合格）の組を全部たどる
@@ -105,8 +105,8 @@ const splitQ = (cnt) => { const hi = cnt.map(([a]) => a > 0), lo = cnt.map(([, b
   check("今日の5問（やさしい2・ふつう2・むずかしい1、種類は重ねない）と上級（むずかしい3・今日のむずかしいと別の種類）を3年分作れる", bad.length === 0, bad.slice(0, 5).join(","));
   check("2か月のうちに12種類が全部出る・前の日と同じ組の日が少ない", cover.size === 12 && sameAsPrev < 120, `${cover.size}種類・前の日と同じ ${sameAsPrev}日`);
   // 過去の日の問題が変わらない（data.js を直したときの見張り）
-  const snap = ["2026-11-27", "2026-11-28", "2027-01-01"].map((d) => [...G.dailyTags(d), ...G.hardTags(d)].map((t) => { const P = G.make(t); return `${P.kind}:${P.v}:${P.A.cnt.map((x) => x[0]).join("")}`; }).join(",")).join(";");
-  check("過去の日（2026-11-27・11-28・2027-01-01）の5問と上級3問が作ったときのまま（種類・場面を足す・並べ替える・消すと変わる）", snap === PINS, snap);
+  const snap = ["2026-11-27", "2026-11-28", "2027-01-01"].map((d) => [...G.dailyTags(d), ...G.hardTags(d)].map((t) => { const P = G.make(t); return `${P.kind}:${P.v}:${[P.A, P.B].map((g) => g.cnt.map((x) => x.join(".")).join("/")).join("|")}`; }).join(",")).join(";");
+  check("過去の日（2026-11-27・11-28・2027-01-01）の5問と上級3問が作ったときのまま（種類・場面・A組とB組の点数の柱。種類・場面を足す・並べ替える・消すと変わる）", snap === PINS, snap);
 }
 
 // ---- 2. ファイルの中身 ----
@@ -161,10 +161,12 @@ await new Promise((r) => server.once("listening", r));
 const url = `http://127.0.0.1:${server.address().port}/`;
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const errors = [];
-const TODAY = new Date(Date.now() + 9 * 3600e3 + SHIFT0).toISOString().slice(0, 10);
+// 時計は検査の始めに一度だけ決め、日本時間のその日の正午から進める（期待値の TODAY とブラウザの日付を同じにし、午前0時をまたいでも日がずれない）
+const NOON = Date.parse(new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10) + "T03:00:00Z"), CLOCK = NOON - Date.now();
+const TODAY = new Date(NOON + 9 * 3600e3 + SHIFT0).toISOString().slice(0, 10);
 async function ctxOf(opts = {}, extra = 0) {
   const c = await browser.newContext({ viewport: { width: 390, height: 800 }, ...opts });
-  if (SHIFT0 + extra) await c.addInitScript((sh) => { const o = Date.now; Date.now = () => o() + sh; }, SHIFT0 + extra);
+  await c.addInitScript((sh) => { const o = Date.now; Date.now = () => o() + sh; }, CLOCK + SHIFT0 + extra);
   return c;
 }
 async function newPage(w = 390, ctx) {
@@ -364,7 +366,7 @@ try {
 
   // カレンダー・あとから：過去の日の記録を置いて見る。第1回から日がたっていなくても見られるよう、時計を10日進める
   {
-    const SHIFT = 10 * 864e5, TODAY = new Date(Date.now() + 9 * 3600e3 + SHIFT0 + SHIFT).toISOString().slice(0, 10), dayBefore = (n) => new Date(Date.parse(TODAY) - n * 864e5).toISOString().slice(0, 10);
+    const SHIFT = 10 * 864e5, TODAY = new Date(NOON + 9 * 3600e3 + SHIFT0 + SHIFT).toISOString().slice(0, 10), dayBefore = (n) => new Date(Date.parse(TODAY) - n * 864e5).toISOString().slice(0, 10);
     const cx = await ctxOf({}, SHIFT);
     const q = await newPage(390, cx);
     await q.evaluate(([d2, d3]) => { localStorage.setItem("gkl-v1", JSON.stringify({ v: 1, tut: true, days: { [d2]: { m: [0, 0, 0, 0, 0], k: [] }, [d3]: { m: [1, 0, 0, 2, 0], k: [] } }, hdays: {}, adays: {}, dex: {}, runs: {}, kofi: {}, ach: {}, ebest: 0 })); }, [dayBefore(2), dayBefore(3)]);
@@ -507,6 +509,31 @@ try {
       await q.evaluate(() => { const h = document.querySelector("#hint"); if (h) { h.disabled = false; h.click(); } }); await q.waitForTimeout(50);
       check("別のタブで先に進んだ古い画面でヒントを押しても、復習の段は戻らない", await q.evaluate((t) => JSON.parse(localStorage.getItem("gkl-depth")).rv[t].s, tq) === 2);
     }
+    // 別のタブで線を確かめて2段目へ進んでいたら、その線も合わせる（古い線のまま「そろいました」と出さない。gokaku-line#1 の CodeRabbit）
+    { const tq = "rf|dl1";
+      await q.evaluate((t) => { __nm.save((s) => { s.runs.p = { mode: "p", date: __nm.todayKey(), list: [t], res: [], cur: null, id: "dl" }; }); __nm.play("p"); }, tq);
+      const okp = await q.evaluate(() => __nm.cur().P.ok[0]);
+      await q.evaluate(([t, ln]) => __nm.save((s) => { s.runs.p.cur = { i: 0, tag: t, wrong: [], hints: 0, step: 2, w2: [], ln }; }), [tq, okp]);
+      await q.evaluate(() => { const c = __nm.cur(); __nm.setLine(1, c.ln[1] < 9 ? c.ln[1] + 1 : c.ln[1] - 1); }); await q.waitForTimeout(100);
+      const got = await q.evaluate(() => ({ ln: __nm.cur().ln, step: __nm.cur().step, saved: __nm.load().runs.p.cur.ln, ui: [document.querySelector("#ln0").value, document.querySelector("#ln1").value].map(Number) }));
+      check("別のタブで2段目へ進んでいたら、そのタブで確かめた線も取り込む（画面・保存とも）", got.step === 2 && [got.ln, got.saved, got.ui].every((x) => JSON.stringify(x) === JSON.stringify(okp)), JSON.stringify({ okp, got }));
+    }
+    // 前に保存したヒントのある問題でつまみを動かしても、復習の日を延ばさない（新しいまちがい・ヒントのときだけ入れ直す。gokaku-line#1 の CodeRabbit）
+    { const tq = "rv|de1", due = () => q.evaluate((t) => (JSON.parse(localStorage.getItem("gkl-depth")).rv[t] || {}).due, tq);
+      await q.evaluate((t) => { const d = JSON.parse(localStorage.getItem("gkl-depth")); d.rv[t] = { s: 0, due: "2026-01-01", t: 5 }; localStorage.setItem("gkl-depth", JSON.stringify(d)); __nm.save((s) => { s.runs.p = { mode: "p", date: __nm.todayKey(), list: [t], res: [], cur: { i: 0, tag: t, wrong: [], hints: 1, step: 1, w2: [] }, id: "de" }; }); __nm.play("p"); }, tq);
+      await q.evaluate(() => { const c = __nm.cur(); __nm.setLine(1, c.ln[1] < 9 ? c.ln[1] + 1 : c.ln[1] - 1); }); await q.waitForTimeout(50);
+      const d1 = await due();
+      await q.click("#hint"); await q.waitForTimeout(50);
+      const d2 = await due();
+      check("前に使ったヒントでは、つまみを動かしても復習の日を延ばさない・新しいヒントでは入れ直す", d1 === "2026-01-01" && d2 > TODAY, `${d1} → ${d2}`);
+    }
+    // 2回目のヒントの文：そろう組が無いとき、合格率と見逃し率がそろう組があるかどうかで言い分ける（分かれ方のちがう組に、無い組を前提にした文を出さない。gokaku-line#1 の CodeRabbit）
+    { const tags = []; for (const k of G.KINDS) for (let i = 0; i < 30; i++) tags.push(`${k.id}|kh${i}`);
+      const texts = await q.evaluate((ts) => ts.map((t) => __nm.keyOf2(__nm.G.make(t))), tags), bad = [];
+      tags.forEach((t, i) => { const P = G.make(t), qq = searchQ(P), x = texts[i];
+        const want = qq.ok.length ? /A組の線を/ : qq.rf.length ? /当たり率がずれます/ : /同時にそろえる線の組も、この点数にはありません/;
+        if (!want.test(x)) bad.push(`${t}:${x}`); });
+      check("2回目のヒントの文は、そろう組・合格率と見逃し率がそろう組の有る無しと合う（全種類×30）", bad.length === 0, bad.slice(0, 3).join(" / ")); }
     // 復習の途中でヒント・まちがいがあって日の来た問題が0になっても、ホームの「復習の続きから」で戻れる
     { const rk = tDiff;
       await q.evaluate((k) => { const d = JSON.parse(localStorage.getItem("gkl-depth")); d.rv = { [k]: { s: 0, due: "2026-01-01", t: 3 } }; localStorage.setItem("gkl-depth", JSON.stringify(d)); }, rk);
